@@ -13,14 +13,14 @@ class ImageConstants {
   static const noImageAdded = "assets/no_image_added.png";
   static const correct = "assets/assets_correct.png";
   static const doc = "assets/pdf.png";
-   static const profile = "assets/profile.png";
-    static const String error = "assets/error.png";
-     static const String appInfo = "assets/exclamation.png";
-      static const String exit = "assets/exit.png";
-       static const String logout = "assets/logout.png";
-        static const String privacyploicy = "assets/privacy.png";
-         static const String bg = "assets/background.png";
-          static const String location = "assets/location.png";
-        
-
+  static const profile = "assets/profile.png";
+  static const String error = "assets/ic_cancel.png";
+  static const String appInfo = "assets/exclamation.png";
+  static const String exit = "assets/exit.png";
+  static const String logout = "assets/logout.png";
+  static const String privacyploicy = "assets/privacy.png";
+  static const String bg = "assets/background.png";
+  static const String location = "assets/location.png";
+  static const String masterdb = "assets/download.png";
+ 
 }

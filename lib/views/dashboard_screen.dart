@@ -7,10 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tabapplication/constants/colors.dart';
+import 'package:tabapplication/constants/imageconstant.dart';
+import 'package:tabapplication/res/components/loader.dart';
 import 'package:tabapplication/res/components/reusableCardComponent.dart';
 import 'package:tabapplication/res/constants/appStrings.dart';
 import 'package:tabapplication/routes/app_routes.dart';
+import 'package:tabapplication/viewmodel/masterdata_view_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -167,7 +172,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void initState() {
-    
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -208,6 +212,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final masterdataprovider = Provider.of<MasterDataViewModel>(context);
     if (Platform.isAndroid) {
       platform.setMethodCallHandler((call) async {
         switch (call.method) {
@@ -260,116 +265,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              showCupertinoDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return CupertinoAlertDialog(
-                    title: const Text('Exit App'),
-                    content:
-                        const Text('Are you sure you want to exit the app?'),
-                    actions: <Widget>[
-                      CupertinoDialogAction(
-                        child: const Text('Yes'),
-                        onPressed: () {
-                          SystemNavigator.pop();
-                        },
-                      ),
-                      CupertinoDialogAction(
-                        child: const Text('No'),
-                        onPressed: () {
-                          Navigator.of(context).pop(false);
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-          title: const Text('Dashboard'),
-        ),
-        body: Stack(
-          children: <Widget>[
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ReusableCardComponent(ontap:() async {
-                   SharedPreferences prefs =
-                        await SharedPreferences.getInstance();
-                    bool flag = await prefs.getBool('profileflag') ?? false;
-                    print("punch in result$profile");
-
-                    if (profile) {
-                      Navigator.pushNamed(context, AppRoutes.attendance);
-                    } else if (Platform.isAndroid) {
-                      cameraScreen();
-                    } else if (Platform.isIOS) {
-                      ProfileRegistartIOS();
-                    }
-                },
-                  text: AppStrings.attendancetitle,
-                 
-                ),
-                const SizedBox(height: 16.0),
-                ReusableCardComponent(
-                  text: AppStrings.update_profile,
-                 
-                  ontap: () {
-                    /* showCupertinoDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return CupertinoAlertDialog(
-                          title: const Text('Update Profile'),
-                          content: const Text(
-                              'Are you sure you want to delete this user?'),
-                          actions: <Widget>[
-                            CupertinoDialogAction(
-                              child: const Text('OK'),
-                              onPressed: () async {
-                                SharedPreferences prefs =
-                                    await SharedPreferences.getInstance();
-                                prefs.remove('punchRecords');
-                                prefs.remove(SharedConstants.userName);
-                                prefs.setBool("profileflag", false);
-                                profile = false;
-                                setState(() {});
-                                Navigator.of(context).pop(true);
-                                showDialog(
-                                    barrierDismissible: false,
-                                    context: context,
-                                    builder: (BuildContext context1) {
-                                      return CustomErrorAlert(
-                                          Buttontext: "OK",
-                                          descriptions: "User Profile Updated",
-                                          Img: ImageConstants.correct,
-                                          onPressed: () {
-                                            Navigator.of(context1).pop(true);
-                                            if (Platform.isAndroid) {
-                                              cameraScreen();
-                                            } else if (Platform.isIOS) {
-                                              ProfileRegistartIOS();
-                                            }
-                                          },
-                                          imagebg: Colors.white,
-                                          bgColor: AppColors.primary);
-                                    });
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    ); */
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              backgroundColor: AppColors.primary,
+              centerTitle: true,
+              title: const Text(
+                'DASHBOARD',
+                style: TextStyle(color: AppColors.white, fontSize: 20),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    await masterdataprovider.getMasterDataDetails(context);
                   },
+                  icon: Image.asset(
+                    ImageConstants.masterdb, // Replace with your image path
+                    width: 24, // Adjust the width as needed
+                    height: 24, // Adjust the height as needed
+                    color: Colors.white, // Adjust the color as needed
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+            body: Stack(
+              children: <Widget>[
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ReusableCardComponent(
+                      ontap: () async {
+                        Navigator.pushNamed(context, AppRoutes.attendance);
+                      },
+                      text: AppStrings.attendancetitle,
+                    ),
+                    const SizedBox(height: 16.0),
+                    ReusableCardComponent(
+                      text: AppStrings.update_profile,
+                      ontap: () {
+                        /* showCupertinoDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return CupertinoAlertDialog(
+                              title: const Text('Update Profile'),
+                              content: const Text(
+                                  'Are you sure you want to delete this user?'),
+                              actions: <Widget>[
+                                CupertinoDialogAction(
+                                  child: const Text('OK'),
+                                  onPressed: () async {
+                                    SharedPreferences prefs =
+                                        await SharedPreferences.getInstance();
+                                    prefs.remove('punchRecords');
+                                    prefs.remove(SharedConstants.userName);
+                                    prefs.setBool("profileflag", false);
+                                    profile = false;
+                                    setState(() {});
+                                    Navigator.of(context).pop(true);
+                                    showDialog(
+                                        barrierDismissible: false,
+                                        context: context,
+                                        builder: (BuildContext context1) {
+                                          return CustomErrorAlert(
+                                              Buttontext: "OK",
+                                              descriptions: "User Profile Updated",
+                                              Img: ImageConstants.correct,
+                                              onPressed: () {
+                                                Navigator.of(context1).pop(true);
+                                                if (Platform.isAndroid) {
+                                                  cameraScreen();
+                                                } else if (Platform.isIOS) {
+                                                  ProfileRegistartIOS();
+                                                }
+                                              },
+                                              imagebg: Colors.white,
+                                              bgColor: AppColors.primary);
+                                        });
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ); */
+                      },
+                    ),
+                    ReusableCardComponent(
+                      ontap: () async {
+                        await masterdataprovider.checkLocation();
+                      },
+                      text: "Co-ordinates",
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (masterdataprovider.isLoaderVisible) LoaderComponent()
+        ],
       ),
     );
   }

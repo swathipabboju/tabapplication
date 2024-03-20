@@ -1,8 +1,9 @@
-/* import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -14,16 +15,16 @@ import 'package:tabapplication/res/components/alertComponent.dart';
 import 'package:tabapplication/res/components/loader.dart';
 import 'package:tabapplication/routes/app_routes.dart';
 import 'package:tabapplication/sharedpreferences/share_pref_constants.dart';
-import 'package:tabapplication/viewmodel/attendenceViewModel.dart';
+import 'package:tabapplication/viewmodel/attendence_view_model.dart';
 
-class AttendanceScreen extends StatefulWidget {
-  const AttendanceScreen({super.key});
+class AttendanceMJPTScreen extends StatefulWidget {
+  const AttendanceMJPTScreen({super.key});
 
   @override
-  State<AttendanceScreen> createState() => _AttendanceScreenState();
+  State<AttendanceMJPTScreen> createState() => _AttendanceMJPTScreenState();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
+class _AttendanceMJPTScreenState extends State<AttendanceMJPTScreen> {
   File? localImage;
   MethodChannel platform = const MethodChannel('example.com/channel');
   MethodChannel platformChannelIOS =
@@ -103,7 +104,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
       print("punch result in Ios: $attendancestatus");
       if (attendancestatus == "punchIn" && frResult == "face Matched") {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         setState(() {
           resultvalue = attendancestatus;
         });
@@ -128,7 +129,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               );
             });
       } else if (attendancestatus == "punchOut" && frResult == "face Matched") {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         setState(() {
           resultvalue = attendancestatus;
         });
@@ -155,11 +156,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               );
             });
       } else {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         Navigator.pushReplacementNamed(context, AppRoutes.dashboardScreen);
       }
     } else {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       punchResult = '';
     }
   }
@@ -174,7 +175,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       facedetectedOUT = false;
       punchRecords.add(PunchRecord(
           'Punch In', DateFormat("hh:mm:ss a").format(DateTime.now()), "IN"));
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       Alerts.showAlertDialog(
         context,
         "Punch In Successful",
@@ -193,7 +194,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       facedetectedIN = false;
       punchRecords.add(PunchRecord(
           'Punch Out', DateFormat("hh:mm:ss a").format(DateTime.now()), "OUT"));
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       Alerts.showAlertDialog(
         context,
         "Punch Out Successful",
@@ -207,12 +208,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       );
       print("Received result from iOS OUT: $result");
     } else if (result == "Face not matched") {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
     } else {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
     }
     await _savePunchRecords();
-    provider.setIsLoadingStatus(false);
+    provider.changeLoaderStatus(false);
     setState(() {});
   }
 
@@ -256,16 +257,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      localImage = await getImageFile();
-      base64IMG = await fileToBase64(localImage ?? File(''));
-      bytes = base64Decode(base64IMG);
-      setState(() {
-        print("localImage --------- $localImage");
-      });
-      await _getPunchRecords();
-      await _checkDayChange();
-    });
   }
 
   Future<File?> getImageFile() async {
@@ -327,7 +318,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<AttendanceViewModel>(context);
 
-    if (Platform.isAndroid) {
+    /* if (Platform.isAndroid) {
       platform.setMethodCallHandler((call) async {
         switch (call.method) {
           case 'onResultFromAndroidIN':
@@ -348,17 +339,70 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             break;
         }
       });
-    }
+    } */
     return Stack(
       children: [
         Scaffold(
             appBar: AppBar(
-              title: Text("Attendance"),
+              centerTitle: true,
+              leading: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              backgroundColor: AppColors.primary,
+              title: Text(
+                "Attendance",
+                style: TextStyle(color: AppColors.white),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    // Navigator.pushNamed(context, AppRoutes.attendanceHistory);
+                  },
+                  icon: Icon(
+                    Icons.home,
+                    color: AppColors.white,
+                  ),
+                ),
+              ],
             ),
             body: Container(
-                color: AppColors.primaryDark,
+                color: AppColors.white,
                 child: Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        onChanged: (val) async {
+                          final attendanceprovider =
+                              Provider.of<AttendanceViewModel>(context,
+                                  listen: false);
+                          // attendanceprovider.changeLoaderStatus(true);
+                          await attendanceprovider.getAttendanceInfoDetails(
+                              context, val);
+                          Fluttertoast.showToast(
+                              msg: 'Attendance Info Fetched Successfully!');
+                          // Alerts.showAlertDialog(context, "${attendanceprovider.attendanceInfoData?.attendanceInfo?.markAttendance}",
+                          //     Title: Title, onpressed: () {}, buttontext: "OK");
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Please enter employee id",
+                          border: OutlineInputBorder(
+                            // Add this line to create a border
+                            borderRadius: BorderRadius.circular(
+                                10.0), // Adjust the value to change border radius
+                            borderSide: BorderSide(
+                                color: AppColors
+                                    .primary), // Adjust the color as needed
+                          ),
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       height: 10,
                     ),
@@ -366,14 +410,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         ? Expanded(
                             child: Image.memory(
                                 width: 100, height: 100, bytes ?? Uint8List(0)))
-                        : Expanded(
+                        : Container(),
+                    /* Expanded(
                             flex: 1,
                             child: Image.asset(
                               ImageConstants.appIcon,
                               width: 100,
                               height: 100,
                             ),
-                          ),
+                          ), */
                     SizedBox(
                       height: 10,
                     ),
@@ -537,10 +582,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       onPressed: (((punchRecords.length) % 2 == 0))
                           ? () {
                               if (Platform.isAndroid) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 _faceRecogPunchIn();
                               } else if (Platform.isIOS) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 faceRecogPunchInIOS();
                               }
                             }
@@ -573,10 +618,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       onPressed: (((punchRecords.length) % 2 != 0))
                           ? () {
                               if (Platform.isAndroid) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 _faceRecogPunchOut();
                               } else if (Platform.isIOS) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 faceRecogPunchOutIOS();
                               }
                             }
@@ -595,9 +640,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 ],
               ),
             )),
-        if (provider.getIsLoadingStatus) LoaderComponent(),
+        if (provider.isLoaderVisible) LoaderComponent(),
       ],
     );
   }
 }
- */

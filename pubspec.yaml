@@ -42,6 +42,12 @@ dependencies:
   provider: ^6.1.2
   flutter_launcher_icons: ^0.13.1
   flutter_image_compress: ^2.1.0
+  dio: ^4.0.6
+  connectivity_plus: ^2.3.8
+  package_info_plus: ^4.2.0
+  sqflite: ^2.3.2
+  geocoding: ^2.1.0
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:

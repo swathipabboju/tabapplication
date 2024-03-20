@@ -14,8 +14,7 @@ import 'package:tabapplication/res/components/alertComponent.dart';
 import 'package:tabapplication/res/components/loader.dart';
 import 'package:tabapplication/routes/app_routes.dart';
 import 'package:tabapplication/sharedpreferences/share_pref_constants.dart';
-import 'package:tabapplication/viewmodel/attendenceViewModel.dart';
-
+import 'package:tabapplication/viewmodel/attendence_view_model.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
@@ -26,6 +25,7 @@ class AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
   File? localImage;
+  bool _isSearchVisible = false;
   MethodChannel platform = const MethodChannel('example.com/channel');
   MethodChannel platformChannelIOS =
       const MethodChannel("FlutterFramework/swift_native");
@@ -104,7 +104,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
       print("punch result in Ios: $attendancestatus");
       if (attendancestatus == "punchIn" && frResult == "face Matched") {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         setState(() {
           resultvalue = attendancestatus;
         });
@@ -129,7 +129,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               );
             });
       } else if (attendancestatus == "punchOut" && frResult == "face Matched") {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         setState(() {
           resultvalue = attendancestatus;
         });
@@ -156,11 +156,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               );
             });
       } else {
-        provider.setIsLoadingStatus(false);
+        provider.changeLoaderStatus(false);
         Navigator.pushReplacementNamed(context, AppRoutes.dashboardScreen);
       }
     } else {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       punchResult = '';
     }
   }
@@ -175,7 +175,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       facedetectedOUT = false;
       punchRecords.add(PunchRecord(
           'Punch In', DateFormat("hh:mm:ss a").format(DateTime.now()), "IN"));
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       Alerts.showAlertDialog(
         context,
         "Punch In Successful",
@@ -194,7 +194,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       facedetectedIN = false;
       punchRecords.add(PunchRecord(
           'Punch Out', DateFormat("hh:mm:ss a").format(DateTime.now()), "OUT"));
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
       Alerts.showAlertDialog(
         context,
         "Punch Out Successful",
@@ -208,12 +208,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       );
       print("Received result from iOS OUT: $result");
     } else if (result == "Face not matched") {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
     } else {
-      provider.setIsLoadingStatus(false);
+      provider.changeLoaderStatus(false);
     }
     await _savePunchRecords();
-    provider.setIsLoadingStatus(false);
+    provider.changeLoaderStatus(false);
     setState(() {});
   }
 
@@ -538,10 +538,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       onPressed: (((punchRecords.length) % 2 == 0))
                           ? () {
                               if (Platform.isAndroid) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 _faceRecogPunchIn();
                               } else if (Platform.isIOS) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 faceRecogPunchInIOS();
                               }
                             }
@@ -574,10 +574,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       onPressed: (((punchRecords.length) % 2 != 0))
                           ? () {
                               if (Platform.isAndroid) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 _faceRecogPunchOut();
                               } else if (Platform.isIOS) {
-                                provider.setIsLoadingStatus(true);
+                                provider.changeLoaderStatus(true);
                                 faceRecogPunchOutIOS();
                               }
                             }
@@ -596,7 +596,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 ],
               ),
             )),
-        if (provider.getIsLoadingStatus) LoaderComponent(),
+        if (provider.isLoaderVisible) LoaderComponent(),
       ],
     );
   }
